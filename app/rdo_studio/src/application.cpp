@@ -9,6 +9,7 @@
 #include <QSettings>
 #include <QMessageBox>
 #include <QRegExp>
+#include <QDebug>
 #include "utils/src/common/warning_enable.h"
 // ----------------------------------------------------------------------- SYNOPSIS
 #include "utils/src/file/rdofile.h"
@@ -46,14 +47,17 @@ namespace
 	PluginOptionType getPluginsOptions(const boost::program_options::variables_map& vm,
 	                                   const std::string& prefix)
 	{
+		qWarning() << "in plugin options";
 		PluginOptionType pluginOptions;
 		namespace po = boost::program_options;
 		for (const po::variables_map::value_type& pair: vm)
 		{
 			const std::string& key = pair.first;
+			qWarning() << "\tcheck" << QString::fromStdString(key);
 			int postfix = validateKeyByPrefix(key, prefix);
 			if (postfix != -1)
 			{
+				qWarning() << "Detect plugin №" << postfix << "options: " << QString::fromStdString(pair.second.as<std::string>());
 				pluginOptions.insert(std::make_pair(postfix, pair.second.as<std::string>()));
 			}
 		}
@@ -94,18 +98,15 @@ void g_messageOutput(QtMsgType type, const QMessageLogContext& context, const QS
 
 	case QtWarningMsg:
 		TRACE1("Warning: %s\n", message.toLocal8Bit().constData());
-		if (g_pApp->platformName() != "minimal")
-			QMessageBox::warning(g_pApp->getMainWnd(), "QtWarning", message);
+		QMessageBox::warning(g_pApp->getMainWnd(), "QtWarning", message);
 		break;
 
 	case QtCriticalMsg:
-		if (g_pApp->platformName() != "minimal")
-			QMessageBox::critical(g_pApp->getMainWnd(), "QtCritical", message);
+		QMessageBox::critical(g_pApp->getMainWnd(), "QtCritical", message);
 		break;
 
 	case QtFatalMsg:
-		if (g_pApp->platformName() != "minimal")
-			QMessageBox::critical(g_pApp->getMainWnd(), "QtFatal", message);
+		QMessageBox::critical(g_pApp->getMainWnd(), "QtFatal", message);
 		break;
 	}
 
@@ -238,6 +239,7 @@ void Application::onInit(int argc, char** argv)
 	}
 
 	namespace po = boost::program_options;
+	qWarning() << "Application init, parse options";
 
 	po::options_description desc("RAO-studio");
 	desc.add_options()
@@ -260,8 +262,11 @@ void Application::onInit(int argc, char** argv)
 	catch (const std::exception&)
 	{}
 
+	qWarning() << "Parse options complete, case stage";
+
 	if (vm.count("help"))
 	{
+		qWarning() << "In Help";
 		std::stringstream stream;
 		stream << desc;
 		rdo::locale::cout(stream.str());
@@ -272,34 +277,46 @@ void Application::onInit(int argc, char** argv)
 		quit();
 	}
 
+	qWarning() << "bypass Help";
+
 	std::string openModelName;
 	if (vm.count("input"))
 	{
+		qWarning() << "in input";
 		openModelName = vm["input"].as<std::string>();
 		openModelName = rdo::locale::convertFromCLocale(openModelName);
+		qWarning() << "-i option. Imput file : " << QString::fromStdString(openModelName);
 	}
+	qWarning() << "bypass input";
 
 	bool autoRun = false;
 	if (vm.count("autorun"))
 	{
+		qWarning() << "in autorun";
 		autoRun = true;
 	}
 
+	qWarning() << "bypass autorun";
+
 	if (vm.count("autoexit"))
 	{
+		qWarning() << "in autoexit";
 		m_autoExitByModel = true;
 	}
+	qWarning() << "bypass autoexit";
 
 	if (vm.count("dont_close_if_error"))
 	{
+		qWarning() << "in dont_close_if_error";
 		m_dontCloseIfError = true;
 	}
-
+	qWarning() << "bypass dont_close_if_error";
 	bool autoModel = false;
 	if (!openModelName.empty())
 	{
 		if (rdo::File::exist(openModelName) && g_pModel->openModel(QString::fromStdString(openModelName)))
 		{
+			qWarning() << "Imput file: " << QString::fromStdString(openModelName) << "is exist.";
 			autoModel = true;
 		}
 		else
@@ -316,19 +333,22 @@ void Application::onInit(int argc, char** argv)
 		}
 	}
 
+	qWarning() << "bypass check exist";
 	if (!autoModel)
 	{
 		autoRun            = false;
 		m_dontCloseIfError = false;
 	}
+	qWarning() << "bypass check autoModel";
 
 	if (autoRun)
 	{
 		g_pModel->runModel();
 	}
-
+	qWarning() << "bypass autorun";
 	if (vm.count("plugin_list"))
 	{
+		qWarning() << "in plugin_list";
 		std::stringstream stream;
 		int index = 0;
 		for (const LPPluginInfo& pluginInfo: *(m_pluginLoader.getPluginInfoList()))
@@ -340,8 +360,10 @@ void Application::onInit(int argc, char** argv)
 		rdo::locale::cout(stream.str());
 		quit();
 	}
+	qWarning() << "bypass plugin_list";
 
 	m_pluginLoader.autoStartPlugins(getPluginsOptions(vm, "plugin"));
+	qWarning() << "bypass plugin";
 }
 
 RDOKernel* Application::getKernel() const

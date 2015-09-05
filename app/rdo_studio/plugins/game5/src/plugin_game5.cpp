@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include <QBitmap>
 #include <QDir>
+#include <QDebug>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include "utils/src/common/warning_enable.h"
@@ -182,6 +183,7 @@ void PluginGame5::pluginStopAction(QWidget* pParent)
 
 void PluginGame5::executeCommand(const std::string& commandLine)
 {
+	qWarning() << "Выполнение команды плагина";
 	if (!g_pApp || !g_pApp->getMainWndUI() || !g_pApp->getMainWndUI()->getModel())
 		return;
 
@@ -209,7 +211,9 @@ void PluginGame5::executeCommand(const std::string& commandLine)
 	pModel->getTab()->getItemEdit(rdo::model::DPT)->appendText(PluginGame5ModelGenerator::modelDPT(board));
 	pModel->getTab()->getItemEdit(rdo::model::FUN)->appendText(PluginGame5ModelGenerator::modelFUN(board));
 
+	qWarning() << "Текст модели задан в соответсвии командой: " <<  QString::fromStdString(commandLine);
 	pModel->saveModel();
+	qWarning() << "Модель сохранена. Выход из программы";
 	g_pApp->quit();
 }
 

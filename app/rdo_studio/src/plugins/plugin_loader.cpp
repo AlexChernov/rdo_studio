@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QApplication>
 #include <QSettings>
+#include <QDebug>
 #include "utils/src/common/warning_enable.h"
 // ----------------------------------------------------------------------- SYNOPSIS
 #include "app/rdo_studio/src/plugins/plugin_loader.h"
@@ -202,22 +203,27 @@ void Loader::startPlugin(const LPPluginInfo& pluginInfo, const std::string& comm
 void Loader::autoStartPlugins(const std::map<int, std::string>& options)
 {
 	int index = 0;
+	qWarning() << "in autostart pluings";
 	for (const LPPluginInfo& pluginInfo: *m_pMergedPluginInfoList)
 	{
 		if (options.count(index))
 		{
+			qWarning() << "Старт плагина " << index << " " << pluginInfo->getName();
 			startPlugin(pluginInfo, options.at(index));
+			qWarning() << "Плагин " << index << " " << pluginInfo->getName() << "успешно запущен с параметрами: " << QString::fromStdString(options.at(index));
 		}
 		else
 		{
 			if (pluginInfo->getAutoload() && pluginInfo->isAvailable())
 			{
+				qWarning() << "autostart pluings";
 				startPlugin(pluginInfo);
 			}
 		}
 
 		index++;
 	}
+	qWarning() << "in autostart pluings";
 }
 
 const LPPluginInfoList& Loader::getPluginInfoList() const
